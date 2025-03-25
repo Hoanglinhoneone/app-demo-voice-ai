@@ -9,12 +9,14 @@ import vcc.viv.voiceai.BuildConfig
 class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        if(BuildConfig.DEBUG){
+        if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         } else {
             Timber.plant(ReleaseTree())
         }
+
     }
+
     // Ví dụ về một cây log tùy chỉnh cho chế độ release
     class ReleaseTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {

@@ -5,6 +5,9 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import vcc.viv.voiceai.data.network.ApiService
+import vcc.viv.voiceai.data.repository.ChatRepository
+import vcc.viv.voiceai.data.repository.ChatRepositoryImp
 import javax.inject.Singleton
 
 @Module
@@ -14,5 +17,11 @@ object AppModule {
     @Singleton
     fun provideGson(): Gson {
         return Gson()
+    }
+
+    @Provides
+    @Singleton
+    fun bindChatRepository(apiService: ApiService): ChatRepository {
+        return ChatRepositoryImp(apiService)
     }
 }

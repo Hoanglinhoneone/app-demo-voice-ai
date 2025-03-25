@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -42,13 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import vcc.viv.voiceai.MainViewModel
 import vcc.viv.voiceai.R
-import vcc.viv.voiceai.common.Constans
 import vcc.viv.voiceai.common.model.Message
+import vcc.viv.voiceai.common.model.Role
 import vcc.viv.voiceai.ui.theme.VoiceAiTheme
 
 @SuppressLint("ShowToast")
@@ -60,10 +62,9 @@ fun ChatScreen(
     val context = LocalContext.current
     val chatViewModel: ChatViewModel = hiltViewModel()
     val mainViewModel: MainViewModel = hiltViewModel()
-    val ttsState = mainViewModel.ttsState.collectAsState()
+    val ttsState by mainViewModel.ttsState.collectAsStateWithLifecycle()
     val sttState = mainViewModel.sttState.collectAsState()
-    val uiState = chatViewModel.uiState.collectAsState()
-    val messages by chatViewModel.messages.collectAsState()
+    val messages by mainViewModel.messages.collectAsState()
     val scope: CoroutineScope = rememberCoroutineScope()
     val permissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
@@ -73,20 +74,19 @@ fun ChatScreen(
                     mainViewModel.startListening()
                 }
             })
-    LaunchedEffect(ttsState.value.isSpeaking) {
+    LaunchedEffect(ttsState.isSpeaking) {
         Toast.makeText(context, "Bắt đầu đọc", Toast.LENGTH_SHORT).show()
     }
     LaunchedEffect(sttState.value.error) {
         Toast.makeText(context, "${sttState.value.error}", Toast.LENGTH_SHORT).show()
     }
-    LaunchedEffect(sttState.value.spokenText) {
-        chatViewModel.updateMessageInput(sttState.value.spokenText)
-    }
-    Scaffold (
+
+
+    Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackBarHostState)
         },
-    ){ paddingValues ->
+    ) { paddingValues ->
         Row(
             modifier = modifier
                 .fillMaxSize()
@@ -168,9 +168,7 @@ fun ChatScreen(
                             painter = painterResource(id = R.drawable.ic_person),
                             contentDescription = null,
                             modifier = Modifier.clickable {
-                                mainViewModel.updateRoleSpeak(Constans.Role.SYSTEM)
-                                mainViewModel.speak("Xin chào Hoàng ngọc linh nhé")
-                                chatViewModel.updateMessageOutput("Xin chào Hoàng ngọc linh nhé")
+                                mainViewModel.startListening()
                             }
                         )
                         Text(
@@ -203,13 +201,13 @@ fun ItemChat(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = if (message.isMe) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (message.participant == Role.USER.title) Arrangement.End else Arrangement.Start
     ) {
         Text(
-            text = message.text,
+            text = message.content,
             modifier = modifier
                 .background(
-                    if (message.isMe) Color.LightGray else Color.Gray,
+                    if (message.participant == Role.USER.title) Color.LightGray else Color.Gray,
                     shape = RoundedCornerShape(20.dp)
                 )
                 .padding(10.dp, 10.dp)
@@ -220,19 +218,17 @@ fun ItemChat(
 
 @Composable
 fun ChatView(
-    messages: List<Message> = listOf(
-        Message("Hello chat", true),
-        Message("Hello Linh", false),
-        Message("How are you", true),
-        Message("I'm fine, thank you", false),
-        Message("What's your name", true),
-        Message("My name is ChatGpt", false),
-        Message("Nice to meet you", true),
-        Message("Bye", false)
-    ),
+    messages: List<Message> = emptyList<Message>(),
     modifier: Modifier = Modifier
 ) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(messages.size) {
+        listState.animateScrollToItem(messages.size)
+    }
+
     LazyColumn(
+        state = listState,
         modifier = modifier
             .fillMaxSize()
             .background(Color.Blue, shape = RoundedCornerShape(16.dp)),

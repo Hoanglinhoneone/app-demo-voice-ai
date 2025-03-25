@@ -1,63 +1,56 @@
 package vcc.viv.voiceai
 
+import androidx.collection.MutableScatterSet
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import vcc.viv.voiceai.common.Constans
-import vcc.viv.voiceai.common.SpeechToTextManager
+import timber.log.Timber
 import vcc.viv.voiceai.common.TextToSpeechManager
 import vcc.viv.voiceai.common.base.BaseViewModel
+import vcc.viv.voiceai.common.llm.LargeLangModel
+import vcc.viv.voiceai.common.model.ChatCompletion
+import vcc.viv.voiceai.common.model.ChatRequest
+import vcc.viv.voiceai.common.model.Message
+import vcc.viv.voiceai.common.model.Role
+import vcc.viv.voiceai.common.speech.SpeechToTextManager
+import vcc.viv.voiceai.data.repository.ChatRepository
 import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    private val chatRepository: ChatRepository,
     private val textToSpeechManager: TextToSpeechManager,
-    private val speechToTextManager: SpeechToTextManager
+    private val speechToTextManager: SpeechToTextManager,
+    private val largeLangModel: LargeLangModel
 ) : BaseViewModel() {
     /* **********************************************************************
      * Variable
      ***********************************************************************/
-    private val _ttsState  = MutableStateFlow(TTSState())
+    private val _ttsState = MutableStateFlow(TTSState())
     val ttsState: StateFlow<TTSState> = _ttsState.asStateFlow()
 
     private val _sttState = MutableStateFlow(STTState())
     val sttState: StateFlow<STTState> = _sttState.asStateFlow()
 
-    private val _roleSpeak = MutableStateFlow("")
-    val roleSpeak: StateFlow<String> = _roleSpeak.asStateFlow()
+    private val _messages = MutableStateFlow<List<Message>>(mutableListOf())
+    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
+    private val _messageResponse = MutableStateFlow("")
+
+    //    private val _models = MutableStateFlow(ModelState())
+//    val models: StateFlow<ModelState> = _models.asStateFlow()
     /* **********************************************************************
      * Init
      ***********************************************************************/
     init {
-//        TTS
-//        viewModelScope.launch {
-//            combine(
-//                textToSpeechManager.isSpeaking,
-//                textToSpeechManager.error,
-//                textToSpeechManager.isInitialized,
-//                speechToTextManager.isListening,
-//                speechToTextManager.error,
-//                speechToTextManager.spokenText
-//            ) { isSpeaking, error, isInitialized, isListening, errorSTT, spokenText ->
-//                _ttsState.value = _ttsState.value.copy(
-//                    isSpeaking = isSpeaking,
-//                    error = error,
-//                    isInitialized = isInitialized
-//                )
-//                _sttState.value = _sttState.value.copy(
-//                    isListening = isListening,
-//                    error = errorSTT,
-//                    spokenText = spokenText
-//                )
-//            }.collect()
-//        }
+        getModels()
+        getModelInfo()
+        // TTS
         viewModelScope.launch {
             launch {
                 textToSpeechManager.isSpeaking.collect { isSpeaking ->
@@ -90,23 +83,90 @@ class MainViewModel @Inject constructor(
             }
             launch {
                 speechToTextManager.spokenText.collect { spokenText ->
-                    _sttState.value = _sttState.value.copy(spokenText = spokenText)
+                    spokenText.let {
+                        _sttState.value = _sttState.value.copy(spokenText = spokenText)
+                        if (it.isNotEmpty()) {
+//                            sendMessage(spokenText)
+                            sendMessageToServer(Message(content = spokenText, participant = Role.USER.title))
+//                            updateMessages(Message(content = spokenText, participant = Role.USER.title))
+                        }
+                    }
                 }
             }
         }
     }
+
     /* **********************************************************************
      * Function
      ***********************************************************************/
-    fun updateRoleSpeak(role: String) {
-        _roleSpeak.value = role
+    private fun getModels() {
+        viewModelScope.launch {
+            try {
+                val result = chatRepository.getModels()
+                Timber.d("Models: $result")
+            } catch (e: Exception) {
+                Timber.e("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun getModelInfo(model: String = "gemma-3-27b-it") {
+        viewModelScope.launch {
+            try {
+                val result = chatRepository.getModelInfo(model)
+                Timber.d("Model info: $result")
+            } catch (e: Exception) {
+                Timber.e("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun sendMessageToServer(message: Message){
+        _messages.update { it + message }
+        viewModelScope.launch {
+            try {
+                val request = ChatRequest(
+                    "qwen2-vl-7b-instruct",
+                    _messages.value,
+                    0.7F,
+                    -1,
+                    false
+                    )
+                val result = chatRepository.postChatCompletion(request)
+                updateMessages(Message(content = result.choices?.get(0)?.message?.content ?: "", participant = Role.ASSISTANT.title))
+                Timber.d("Chat completion: $result")
+            } catch (e: Exception) {
+                Timber.e("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun updateMessages(message: Message) {
+        val messages = _messages.value.toMutableList()
+        messages.add(message)
+        _messages.value = messages
+    }
+
+    fun sendMessage(message: String) {
+        Timber.i("Send message: $message")
+//        viewModelScope.launch {
+//            try {
+//                val respone = largeLangModel.sendMessage(message)
+//                respone?.let {
+//                    updateMessages(Message(content = it, participant = Role.ASSISTANT.title))
+//                    _messageResponse.value = it
+//                    speak(result)
+//                    Timber.d("Response: $it")
+//                }
+//            } catch (e: Exception) {
+//                Timber.e("Error: ${e.message}")
+//            }
+//        }
     }
 
     // TTS
-    fun speak(text: String) {
-        if (roleSpeak.value == Constans.Role.SYSTEM) {
-            textToSpeechManager.speak(text)
-        }
+    private fun speak(text: String) {
+        textToSpeechManager.speak(text)
     }
 
     fun stop() {
@@ -123,7 +183,7 @@ class MainViewModel @Inject constructor(
         _ttsState.update { it.copy(speechRate = rate) }
     }
 
-    fun setLanguage(locale: Locale) : Boolean {
+    fun setLanguage(locale: Locale): Boolean {
         val isSupported = textToSpeechManager.setLanguage(locale)
         if (isSupported) {
             _ttsState.update { it.copy(currentLanguage = locale) }
@@ -154,6 +214,7 @@ class MainViewModel @Inject constructor(
         textToSpeechManager.shutdown()
         speechToTextManager.shutdown()
     }
+
     /* **********************************************************************
      * Classes
      ***********************************************************************/

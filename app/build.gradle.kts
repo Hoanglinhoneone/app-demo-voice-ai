@@ -1,3 +1,5 @@
+import java.util.Properties
+import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -10,14 +12,20 @@ android {
     namespace = "vcc.viv.voiceai"
     compileSdk = 35
 
+    val file = rootProject.file("local.properties")
+    val properties = Properties()
+    properties.load(FileInputStream(file))
+
     defaultConfig {
         applicationId = "vcc.viv.voiceai"
         minSdk = 29
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_KEY", properties.getProperty("API_KEY"))
+        buildConfigField("String", "BASE_URL", properties.getProperty("BASE_URL"))
     }
 
     buildTypes {
@@ -43,6 +51,13 @@ android {
 }
 
 dependencies {
+    // Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    // OKHttp
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    // Gemini
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
     //Timber
     implementation(libs.timber)
     //Core
