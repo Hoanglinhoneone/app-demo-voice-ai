@@ -1,9 +1,6 @@
 package vcc.viv.voiceai.ui.screen.home
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,17 +38,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import vcc.viv.voiceai.MainViewModel
 import vcc.viv.voiceai.R
 import vcc.viv.voiceai.common.model.Message
 import vcc.viv.voiceai.common.model.Role
+import vcc.viv.voiceai.ui.component.ModelDropdownMenu
 import vcc.viv.voiceai.ui.theme.VoiceAiTheme
 
 @SuppressLint("ShowToast")
@@ -65,6 +61,7 @@ fun ChatScreen(
     val ttsState by mainViewModel.ttsState.collectAsStateWithLifecycle()
     val sttState = mainViewModel.sttState.collectAsState()
     val messages by mainViewModel.messages.collectAsState()
+    val uiState by mainViewModel.uiState.collectAsState()
     val scope: CoroutineScope = rememberCoroutineScope()
     val permissionLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
@@ -113,41 +110,52 @@ fun ChatScreen(
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_cloud),
-                            contentDescription = null,
-                            modifier = Modifier.clickable {
-//                                chatViewModel.updateMessageInput("Hello Hoang Ngoc Linh")
-                                Timber.i("Permission handle")
-                                when {
-                                    ContextCompat.checkSelfPermission(
-                                        context, Manifest.permission.RECORD_AUDIO
-                                    ) == PackageManager.PERMISSION_GRANTED -> {
-                                        Timber.i("Permission already granted")
-                                        mainViewModel.startListening()
-                                    }
-
-                                    ActivityCompat.shouldShowRequestPermissionRationale(
-                                        context as Activity, Manifest.permission.RECORD_AUDIO
-                                    ) -> {
-                                        Timber.i("Should show a permission rationale")
-                                        scope.launch {
-                                            snackBarHostState.showSnackbar("Vui lòng mở cài đặt và cấp quyền micro")
-                                        }
-                                    }
-
-                                    else -> {
-                                        Timber.i("Request record audio permission")
-                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                    }
-                                }
-                            }
+                        ModelDropdownMenu(
+                            uiState.models,
+                            onClickedModel = { mainViewModel.changeModel(it)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                                .align(Alignment.End)
                         )
-                        Text(
-                            text = "Text to Speech",
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
-                        )
+                        uiState.modelInfo?.let {
+                            Text(text = it.id)
+                        }
+
+
                     }
+//                        Image(
+//                            painter = painterResource(id = R.drawable.ic_cloud),
+//                            contentDescription = null,
+//                            modifier = Modifier.clickable {
+//                                Timber.i("Permission handle")
+//                                when {
+//                                    ContextCompat.checkSelfPermission(
+//                                        context, Manifest.permission.RECORD_AUDIO
+//                                    ) == PackageManager.PERMISSION_GRANTED -> {
+//                                        Timber.i("Permission already granted")
+//                                        mainViewModel.startListening()
+//                                    }
+//
+//                                    ActivityCompat.shouldShowRequestPermissionRationale(
+//                                        context as Activity, Manifest.permission.RECORD_AUDIO
+//                                    ) -> {
+//                                        Timber.i("Should show a permission rationale")
+//                                        scope.launch {
+//                                            snackBarHostState.showSnackbar("Vui lòng mở cài đặt và cấp quyền micro")
+//                                        }
+//                                    }
+//
+//                                    else -> {
+//                                        Timber.i("Request record audio permission")
+//                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+//                                    }
+//                                }
+//                            }
+//                        )
+//                        Text(
+//                            text = "Text to Speech",
+//                            modifier = Modifier.align(Alignment.CenterHorizontally)
+//                        )
                 }
 
                 Box(
