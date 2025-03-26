@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -28,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ import vcc.viv.voiceai.MainViewModel
 import vcc.viv.voiceai.R
 import vcc.viv.voiceai.common.model.Message
 import vcc.viv.voiceai.common.model.Role
+import vcc.viv.voiceai.ui.component.ChatItem
 import vcc.viv.voiceai.ui.component.ModelDropdownMenu
 import vcc.viv.voiceai.ui.theme.VoiceAiTheme
 
@@ -54,6 +56,7 @@ import vcc.viv.voiceai.ui.theme.VoiceAiTheme
 fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
+    val isDarkMode = isSystemInDarkTheme()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val chatViewModel: ChatViewModel = hiltViewModel()
@@ -71,12 +74,6 @@ fun ChatScreen(
                     mainViewModel.startListening()
                 }
             })
-    LaunchedEffect(ttsState.isSpeaking) {
-        Toast.makeText(context, "Bắt đầu đọc", Toast.LENGTH_SHORT).show()
-    }
-    LaunchedEffect(sttState.value.error) {
-        Toast.makeText(context, "${sttState.value.error}", Toast.LENGTH_SHORT).show()
-    }
 
 
     Scaffold(
@@ -88,7 +85,6 @@ fun ChatScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.LightGray)
         ) {
             Column(
                 modifier = Modifier
@@ -102,26 +98,26 @@ fun ChatScreen(
                         .weight(1f)
                         .fillMaxSize()
                         .background(
-                            Color.White,
+                            MaterialTheme.colorScheme.onSurface,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .align(Alignment.CenterHorizontally)
                 ) {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                    ) {
+                    Column {
                         ModelDropdownMenu(
                             uiState.models,
-                            onClickedModel = { mainViewModel.changeModel(it)
+                            onClickedModel = {
+                                mainViewModel.changeModel(it)
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
                                 .align(Alignment.End)
                         )
                         uiState.modelInfo?.let {
-                            Text(text = it.id)
+                            Text(text = it.id,
+                                color = if (isDarkMode) Color.Black else Color.White,
+                                modifier = Modifier.align(Alignment.CenterHorizontally))
                         }
-
-
                     }
 //                        Image(
 //                            painter = painterResource(id = R.drawable.ic_cloud),
@@ -163,7 +159,7 @@ fun ChatScreen(
                         .weight(1f)
                         .fillMaxSize()
                         .background(
-                            Color.White,
+                            MaterialTheme.colorScheme.onSurface,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .align(Alignment.CenterHorizontally)
@@ -173,7 +169,7 @@ fun ChatScreen(
                         modifier = Modifier.align(Alignment.Center),
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_person),
+                            painter = painterResource(id = if (isDarkMode) R.drawable.ic_person else R.drawable.ic_person_white),
                             contentDescription = null,
                             modifier = Modifier.clickable {
                                 mainViewModel.startListening()
@@ -181,6 +177,7 @@ fun ChatScreen(
                         )
                         Text(
                             text = "Speech to Text",
+                            color = if (isDarkMode) Color.Black else Color.White,
                             modifier = Modifier
                                 .align(Alignment.CenterHorizontally)
                                 .padding(top = 8.dp)
@@ -193,7 +190,6 @@ fun ChatScreen(
                 modifier = Modifier
                     .weight(2f)
                     .fillMaxHeight()
-                    .background(Color.LightGray)
                     .padding(8.dp)
             ) {
                 ChatView(messages)
@@ -226,7 +222,13 @@ fun ItemChat(
 
 @Composable
 fun ChatView(
-    messages: List<Message> = emptyList<Message>(),
+    messages: List<Message> = listOf(
+        Message(Role.ASSISTANT.title, "Xin chào tôi là trợ lý ảo"),
+        Message(Role.USER.title, "Xin chào, tôi là user"),
+        Message(Role.ASSISTANT.title, "Xin chào tôi là trợ lý ảo"),
+        Message(Role.USER.title, "Toi là linh"),
+        Message(Role.ASSISTANT.title, "Xin chào tôi là trợ lý ảo"),
+    ),
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -239,12 +241,12 @@ fun ChatView(
         state = listState,
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Blue, shape = RoundedCornerShape(16.dp)),
+            .background(MaterialTheme.colorScheme.onSurface, shape = RoundedCornerShape(16.dp)),
         contentPadding = PaddingValues(8.dp, 10.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(messages) { message ->
-            ItemChat(message)
+            ChatItem(message)
         }
     }
 }
@@ -254,6 +256,6 @@ fun ChatView(
 @Composable
 fun ChatScreenPreview() {
     VoiceAiTheme {
-        ChatScreen()
+        ChatView()
     }
 }

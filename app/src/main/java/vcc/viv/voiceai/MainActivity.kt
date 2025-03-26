@@ -27,15 +27,15 @@ class MainActivity : ComponentActivity() {
                 ChatScreen()
             }
         }
-        // handle error of TTS
+        // handle error
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                mainViewModel.ttsState.collect { ttsState ->
-                    ttsState.error?.let { error ->
-                        Timber.i("Error: $error")
+                mainViewModel.error.collect { error ->
+                    Timber.i("Error: $error")
+                    if(!error.isNullOrEmpty()) {
                         Toast.makeText(this@MainActivity, error, Toast.LENGTH_SHORT).show()
-                        mainViewModel.clearError()
                     }
+//                    mainViewModel.clearError()
                 }
             }
         }

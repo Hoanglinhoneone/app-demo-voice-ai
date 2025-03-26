@@ -104,6 +104,8 @@ class SpeechToTextManager @Inject constructor(private val context: Context) : Re
     override fun onError(error: Int) {
         if (error == SpeechRecognizer.ERROR_CLIENT) {
             return
+        } else if (error == SpeechRecognizer.ERROR_NO_MATCH) {
+            startListening(language)
         }
         _error.value = "ERROR: $error ${error.getSpeechToTextErrorMessage()}"
         Timber.d("Error: $error")

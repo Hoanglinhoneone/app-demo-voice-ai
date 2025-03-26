@@ -4,7 +4,13 @@ import com.google.gson.annotations.SerializedName
 
 enum class Role(val title: String) {
     USER("user"),
-    ASSISTANT("system")
+    ASSISTANT("assistant"),
+}
+
+enum class Participant(val title: String) {
+    USER("user \uD83D\uDDE3\uFE0F "),
+    ASSISTANT("\uD83E\uDD16 system"),
+    ERROR("error")
 }
 
 data class Message(

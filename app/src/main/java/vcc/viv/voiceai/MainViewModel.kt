@@ -33,6 +33,12 @@ class MainViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
+    // use to switch send message to server or gemini
+    private val _isSendServer = MutableStateFlow(true)
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     private val _ttsState = MutableStateFlow(TTSState())
     val ttsState: StateFlow<TTSState> = _ttsState.asStateFlow()
 
@@ -53,11 +59,17 @@ class MainViewModel @Inject constructor(
             launch {
                 textToSpeechManager.isSpeaking.collect { isSpeaking ->
                     _ttsState.value = _ttsState.value.copy(isSpeaking = isSpeaking)
+                    Timber.d("isSpeaking: $isSpeaking")
+                    if (!isSpeaking) {
+                        startListening()
+                    }
                 }
             }
             launch {
                 textToSpeechManager.error.collect { error ->
-                    _ttsState.value = _ttsState.value.copy(error = error)
+                    if (!error.isNullOrEmpty()) {
+                        _error.value = error
+                    }
                 }
             }
 
@@ -76,7 +88,9 @@ class MainViewModel @Inject constructor(
             }
             launch {
                 speechToTextManager.error.collect { error ->
-                    _sttState.value = _sttState.value.copy(error = error)
+                    if (!error.isNullOrEmpty()) {
+                        _error.value = error
+                    }
                 }
             }
             launch {
@@ -84,14 +98,20 @@ class MainViewModel @Inject constructor(
                     spokenText.let {
                         _sttState.value = _sttState.value.copy(spokenText = spokenText)
                         if (it.isNotEmpty()) {
-//                            sendMessage(spokenText)
-                            sendMessageToServer(
+                            updateMessages(
                                 Message(
                                     content = spokenText,
                                     participant = Role.USER.title
                                 )
                             )
-//                            updateMessages(Message(content = spokenText, participant = Role.USER.title))
+                            if (uiState.value.modelInfo?.id  == "Gemini") sendMessageToGemini(spokenText)
+                            else
+                                sendMessageToServer(
+                                    Message(
+                                        content = spokenText,
+                                        participant = Role.USER.title
+                                    )
+                                )
                         }
                     }
                 }
@@ -110,6 +130,7 @@ class MainViewModel @Inject constructor(
                 Timber.d("Models: $result")
             } catch (e: Exception) {
                 Timber.e("Error: ${e.message}")
+                _error.value = e.message
             }
         }
     }
@@ -121,6 +142,7 @@ class MainViewModel @Inject constructor(
                 Timber.d("Model info: $result")
             } catch (e: Exception) {
                 Timber.e("Error: ${e.message}")
+                _error.value = e.message
             }
         }
     }
@@ -131,10 +153,11 @@ class MainViewModel @Inject constructor(
     }
 
     private fun sendMessageToServer(message: Message) {
-        _messages.update { it + message }
         viewModelScope.launch {
             try {
+                Timber.d("LinhHN message: $message")
                 val request = uiState.value.modelInfo?.let {
+                    Timber.d("LinhHN model: ${it.id}")
                     ChatRequest(
                         it.id,
                         _messages.value,
@@ -143,8 +166,11 @@ class MainViewModel @Inject constructor(
                         false
                     )
                 }
+                Timber.d("LinhHN request: $request")
                 val result = request?.let { chatRepository.postChatCompletion(it) }
+                Timber.d("LinhHN result: $result")
                 if (result != null) {
+                    result.choices?.get(0)?.message?.let { speak(it.content) }
                     updateMessages(
                         Message(
                             content = result.choices?.get(0)?.message?.content ?: "",
@@ -155,6 +181,24 @@ class MainViewModel @Inject constructor(
                 Timber.d("Chat completion: $result")
             } catch (e: Exception) {
                 Timber.e("Error: ${e.message}")
+                _error.value = e.message
+                _isSendServer.value = false
+                _uiState.update {
+                    it.copy(
+                        modelInfo = ModelInfo(
+                            id = "Gemini",
+                            obj = "model",
+                            type = "vlm",
+                            publisher = "lmstudio-community",
+                            arch = "gemma3",
+                            compatType = "gguf",
+                            quantization = "Q3_K_L",
+                            state = "loaded",
+                            maxContextLen = 131072
+                        ),
+                    )
+                }
+                sendMessageToGemini(message.content)
             }
         }
     }
@@ -165,21 +209,21 @@ class MainViewModel @Inject constructor(
         _messages.value = messages
     }
 
-    fun sendMessage(message: String) {
+    private fun sendMessageToGemini(message: String) {
         Timber.i("Send message: $message")
-//        viewModelScope.launch {
-//            try {
-//                val respone = largeLangModel.sendMessage(message)
-//                respone?.let {
-//                    updateMessages(Message(content = it, participant = Role.ASSISTANT.title))
-//                    _messageResponse.value = it
-//                    speak(result)
-//                    Timber.d("Response: $it")
-//                }
-//            } catch (e: Exception) {
-//                Timber.e("Error: ${e.message}")
-//            }
-//        }
+        viewModelScope.launch {
+            try {
+                val respone = largeLangModel.sendMessage(message)
+                respone?.let {
+                    updateMessages(Message(content = it, participant = Role.ASSISTANT.title))
+                    speak(respone)
+                    Timber.d("Response: $it")
+                }
+            } catch (e: Exception) {
+                _error.value = e.message
+                Timber.e("Error: ${e.message}")
+            }
+        }
     }
 
     // TTS
@@ -239,15 +283,15 @@ class MainViewModel @Inject constructor(
     data class UiState(
         val models: List<ModelInfo> = emptyList(),
         val modelInfo: ModelInfo? = ModelInfo(
-            id = "deepseek-coder-v2-lite-instruct",
+            id = "gemma-3-27b-it",
             obj = "model",
-            type = "llm",
+            type = "vlm",
             publisher = "lmstudio-community",
-            arch = "deepseek2",
+            arch = "gemma3",
             compatType = "gguf",
-            quantization = "Q4_K_M",
-            state = "not-loaded",
-            maxContextLen = 163840
+            quantization = "Q3_K_L",
+            state = "loaded",
+            maxContextLen = 131072
         ),
     )
 
