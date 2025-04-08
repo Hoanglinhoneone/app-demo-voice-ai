@@ -5,7 +5,7 @@ import vcc.viv.voiceai.common.model.ChatRequest
 import vcc.viv.voiceai.common.model.ModelInfo
 import vcc.viv.voiceai.common.model.Models
 import vcc.viv.voiceai.common.model.TextEmbeddings
-import vcc.viv.voiceai.data.network.ApiService
+import vcc.viv.voiceai.data.datasource.network.ApiService
 import javax.inject.Inject
 
 class ChatRepositoryImp @Inject constructor(

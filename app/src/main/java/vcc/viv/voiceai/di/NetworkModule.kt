@@ -8,7 +8,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import vcc.viv.voiceai.BuildConfig
-import vcc.viv.voiceai.data.network.ApiService
+import vcc.viv.voiceai.data.datasource.network.ApiService
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 

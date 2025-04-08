@@ -1,7 +1,6 @@
 package vcc.viv.voiceai.ui.screen.home
 
 import android.annotation.SuppressLint
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -114,44 +113,42 @@ fun ChatScreen(
                                 .align(Alignment.End)
                         )
                         uiState.modelInfo?.let {
-                            Text(text = it.id,
+                            Text(
+                                text = it.id,
                                 color = if (isDarkMode) Color.Black else Color.White,
-                                modifier = Modifier.align(Alignment.CenterHorizontally))
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
                         }
                     }
-//                        Image(
-//                            painter = painterResource(id = R.drawable.ic_cloud),
-//                            contentDescription = null,
-//                            modifier = Modifier.clickable {
-//                                Timber.i("Permission handle")
-//                                when {
-//                                    ContextCompat.checkSelfPermission(
-//                                        context, Manifest.permission.RECORD_AUDIO
-//                                    ) == PackageManager.PERMISSION_GRANTED -> {
-//                                        Timber.i("Permission already granted")
-//                                        mainViewModel.startListening()
-//                                    }
+//                    Image(
+//                        painter = painterResource(id = R.drawable.ic_cloud),
+//                        contentDescription = null,
+//                        modifier = Modifier.clickable {
+//                            Timber.i("Permission handle")
+//                            when {
+//                                ContextCompat.checkSelfPermission(
+//                                    context, Manifest.permission.RECORD_AUDIO
+//                                ) == PackageManager.PERMISSION_GRANTED -> {
+//                                    Timber.i("Permission already granted")
+//                                    mainViewModel.startListening()
+//                                }
 //
-//                                    ActivityCompat.shouldShowRequestPermissionRationale(
-//                                        context as Activity, Manifest.permission.RECORD_AUDIO
-//                                    ) -> {
-//                                        Timber.i("Should show a permission rationale")
-//                                        scope.launch {
-//                                            snackBarHostState.showSnackbar("Vui lòng mở cài đặt và cấp quyền micro")
-//                                        }
-//                                    }
-//
-//                                    else -> {
-//                                        Timber.i("Request record audio permission")
-//                                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+//                                ActivityCompat.shouldShowRequestPermissionRationale(
+//                                    context as Activity, Manifest.permission.RECORD_AUDIO
+//                                ) -> {
+//                                    Timber.i("Should show a permission rationale")
+//                                    scope.launch {
+//                                        snackBarHostState.showSnackbar("Vui lòng mở cài đặt và cấp quyền micro")
 //                                    }
 //                                }
+//
+//                                else -> {
+//                                    Timber.i("Request record audio permission")
+//                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+//                                }
 //                            }
-//                        )
-//                        Text(
-//                            text = "Text to Speech",
-//                            modifier = Modifier.align(Alignment.CenterHorizontally)
-//                        )
+//                        }
+//                    )
                 }
 
                 Box(

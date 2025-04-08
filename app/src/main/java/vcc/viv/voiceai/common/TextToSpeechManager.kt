@@ -116,14 +116,14 @@ class TextToSpeechManager @Inject constructor(private val context: Context) {
         _isSpeaking.value = false
     }
 
-    fun setVoice(voice : Voice) {
+    fun setVoice(voice: Voice) {
         Timber.i("Đã set voice : $voice")
         textToSpeech?.voice = voice
     }
 
-    fun getSupportVoices() : Collection<Voice> {
+    fun getSupportVoices(): Collection<Voice> {
         Timber.d("Đã get voices")
-        return  textToSpeech?.voices ?: emptyList()
+        return textToSpeech?.voices ?: emptyList()
     }
 
 
