@@ -46,7 +46,6 @@ import vcc.viv.voiceai.MainViewModel
 import vcc.viv.voiceai.R
 import vcc.viv.voiceai.common.model.Message
 import vcc.viv.voiceai.common.model.Role
-import vcc.viv.voiceai.ui.component.ChatItem
 import vcc.viv.voiceai.ui.component.ModelDropdownMenu
 import vcc.viv.voiceai.ui.theme.VoiceAiTheme
 

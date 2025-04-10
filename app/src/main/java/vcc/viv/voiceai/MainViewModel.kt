@@ -16,7 +16,7 @@ import vcc.viv.voiceai.common.model.Message
 import vcc.viv.voiceai.common.model.ModelInfo
 import vcc.viv.voiceai.common.model.Role
 import vcc.viv.voiceai.common.speech.SpeechToTextManager
-import vcc.viv.voiceai.data.repository.ChatRepository
+import vcc.viv.voiceai.data.repository.chat.ChatRepository
 import java.util.Locale
 import javax.inject.Inject
 
@@ -104,7 +104,9 @@ class MainViewModel @Inject constructor(
                                     participant = Role.USER.title
                                 )
                             )
-                            if (uiState.value.modelInfo?.id  == "Gemini") sendMessageToGemini(spokenText)
+                            if (uiState.value.modelInfo?.id == "Gemini") sendMessageToGemini(
+                                spokenText
+                            )
                             else
                                 sendMessageToServer(
                                     Message(

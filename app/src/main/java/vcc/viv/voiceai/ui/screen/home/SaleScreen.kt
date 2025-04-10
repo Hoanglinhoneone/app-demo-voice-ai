@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,10 +32,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import vcc.viv.voiceai.MainViewModel
+import vcc.viv.voiceai.common.getCurrentDateTime
+import vcc.viv.voiceai.common.model.Order
 import vcc.viv.voiceai.common.model.Product
 import vcc.viv.voiceai.ui.component.CustomTextField
+import vcc.viv.voiceai.ui.component.ReceiptDialog
 
 @Preview(showBackground = true)
 @Composable
@@ -48,14 +53,32 @@ fun SalePreview(modifier: Modifier = Modifier) {
 @Composable
 fun SaleScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = HomeViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    mainViewModel: MainViewModel = hiltViewModel()
 ) {
+    val messages by mainViewModel.messages.collectAsState()
+    var showChatView by remember { mutableStateOf(false) }
+    LaunchedEffect (
+        messages.size
+    ){
+        showChatView = true
+        delay(3000)
+        showChatView = false
+    }
     Row(
         modifier = modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         CardScreen(viewModel, modifier = Modifier.weight(0.5f))
-        ProductScreen(viewModel = viewModel, modifier = Modifier.weight(0.5f))
+        Box(
+            modifier = Modifier.weight(0.5f)
+        ) {
+            ProductScreen(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+            if (showChatView) {
+                ChatView(modifier = Modifier.fillMaxWidth(0.5f).fillMaxHeight(0.5f).align(Alignment.BottomCenter),
+                    messages = messages)
+            }
+        }
     }
 }
 
@@ -67,9 +90,9 @@ fun CardScreen(
     val cartUiState by viewModel.cartUiState.collectAsStateWithLifecycle()
     val productsState = rememberLazyListState()
     val listProduct = cartUiState.listProduct
-    LaunchedEffect (listProduct.size){
+    LaunchedEffect(listProduct.size) {
         listProduct.let {
-            if(listProduct.isNotEmpty()) productsState.animateScrollToItem(listProduct.size - 1)
+            if (listProduct.isNotEmpty()) productsState.animateScrollToItem(listProduct.size - 1)
         }
     }
 
@@ -121,14 +144,15 @@ fun CardScreen(
                         MaterialTheme.shapes.small
                     )
                     .clickable {
-
+                        viewModel.onCartAction(CartAction.OnDeleteOrder)
                     }
             ) {
                 Text(
                     text = "Xóa đơn",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
-                        .padding(12.dp, 8.dp),
+                        .padding(12.dp, 8.dp)
+,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -169,7 +193,9 @@ fun CardScreen(
         }
         LazyColumn(
             state = productsState,
-            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.45f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.45f),
         ) {
             itemsIndexed(cartUiState.listProduct) { index, product ->
                 ItemCard(index, product)
@@ -241,6 +267,9 @@ fun CardScreen(
                         MaterialTheme.colorScheme.errorContainer,
                         MaterialTheme.shapes.small
                     )
+                    .clickable {
+                        viewModel.onCartAction(CartAction.OnOrderNow)
+                    }
             ) {
                 Text(
                     text = "In hóa đơn",
@@ -257,16 +286,28 @@ fun CardScreen(
                         MaterialTheme.colorScheme.errorContainer,
                         MaterialTheme.shapes.small
                     )
+                    .clickable {
+                        viewModel.onCartAction(CartAction.OnOrderNow)
+                    }
             ) {
                 Text(
                     text = "Đặt hàng",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
-                        .padding(12.dp, 8.dp)
-                        .clickable {
-
-                        },
+                        .padding(12.dp, 8.dp),
                     style = textStyle
+                )
+            }
+            if (cartUiState.printQR) {
+                ReceiptDialog(onDismiss = { viewModel.closeDialog() },
+                    order = Order(
+                        date = getCurrentDateTime(),
+                        code = cartUiState.code,
+                        listProduct = cartUiState.listProduct,
+                        note = cartUiState.note,
+                        quantity = cartUiState.quantity,
+                        total = cartUiState.total,
+                    )
                 )
             }
         }

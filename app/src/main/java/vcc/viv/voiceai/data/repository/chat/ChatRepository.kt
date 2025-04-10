@@ -1,10 +1,9 @@
-package vcc.viv.voiceai.data.repository
+package vcc.viv.voiceai.data.repository.chat
 
 import vcc.viv.voiceai.common.model.ChatCompletion
 import vcc.viv.voiceai.common.model.ChatRequest
 import vcc.viv.voiceai.common.model.ModelInfo
 import vcc.viv.voiceai.common.model.Models
-import vcc.viv.voiceai.common.model.TextEmbeddings
 
 interface ChatRepository {
 

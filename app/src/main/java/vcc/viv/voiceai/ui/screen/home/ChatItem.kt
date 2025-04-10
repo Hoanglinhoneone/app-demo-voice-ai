@@ -1,4 +1,4 @@
-package vcc.viv.voiceai.ui.component
+package vcc.viv.voiceai.ui.screen.home
 
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column

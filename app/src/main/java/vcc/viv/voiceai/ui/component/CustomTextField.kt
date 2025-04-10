@@ -3,10 +3,7 @@ package vcc.viv.voiceai.ui.component
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -46,11 +43,13 @@ fun CustomTextField(
         @Composable { innerTextField -> innerTextField() }
 ) {
     Box(
-        modifier = Modifier.border(
-            1.dp,
-            borderColor,
-            shape
-        ).fillMaxWidth(),
+        modifier = Modifier
+            .border(
+                1.dp,
+                borderColor,
+                shape
+            )
+            .fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
         BasicTextField(
