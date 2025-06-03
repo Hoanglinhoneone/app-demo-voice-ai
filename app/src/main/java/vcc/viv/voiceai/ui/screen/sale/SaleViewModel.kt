@@ -1,4 +1,4 @@
-package vcc.viv.voiceai.ui.screen.home
+package vcc.viv.voiceai.ui.screen.sale
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,7 +14,7 @@ import vcc.viv.voiceai.data.repository.product.ProductRepository
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class SaleViewModel @Inject constructor(
     private val productRepository: ProductRepository
 ) : ViewModel() {
 

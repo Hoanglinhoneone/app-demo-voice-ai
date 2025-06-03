@@ -1,4 +1,4 @@
-package vcc.viv.voiceai.ui.screen.home
+package vcc.viv.voiceai.ui.screen.sale
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -53,14 +52,14 @@ fun SalePreview(modifier: Modifier = Modifier) {
 @Composable
 fun SaleScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: SaleViewModel = hiltViewModel(),
     mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val messages by mainViewModel.messages.collectAsState()
     var showChatView by remember { mutableStateOf(false) }
-    LaunchedEffect (
+    LaunchedEffect(
         messages.size
-    ){
+    ) {
         showChatView = true
         delay(3000)
         showChatView = false
@@ -69,22 +68,27 @@ fun SaleScreen(
         modifier = modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        CardScreen(viewModel, modifier = Modifier.weight(0.5f))
+        CardUi(viewModel, modifier = Modifier.weight(0.5f))
         Box(
             modifier = Modifier.weight(0.5f)
         ) {
             ProductScreen(viewModel = viewModel, modifier = Modifier.fillMaxSize())
             if (showChatView) {
-                ChatView(modifier = Modifier.fillMaxWidth(0.5f).fillMaxHeight(0.5f).align(Alignment.BottomCenter),
-                    messages = messages)
+                ChatView(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .fillMaxHeight(0.5f)
+                        .align(Alignment.BottomCenter),
+                    messages = messages
+                )
             }
         }
     }
 }
 
 @Composable
-fun CardScreen(
-    viewModel: HomeViewModel,
+fun CardUi(
+    viewModel: SaleViewModel,
     modifier: Modifier = Modifier
 ) {
     val cartUiState by viewModel.cartUiState.collectAsStateWithLifecycle()
@@ -151,8 +155,7 @@ fun CardScreen(
                     text = "Xóa đơn",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
-                        .padding(12.dp, 8.dp)
-,
+                        .padding(12.dp, 8.dp),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -299,7 +302,8 @@ fun CardScreen(
                 )
             }
             if (cartUiState.printQR) {
-                ReceiptDialog(onDismiss = { viewModel.closeDialog() },
+                ReceiptDialog(
+                    onDismiss = { viewModel.closeDialog() },
                     order = Order(
                         date = getCurrentDateTime(),
                         code = cartUiState.code,

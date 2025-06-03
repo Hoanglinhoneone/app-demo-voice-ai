@@ -1,4 +1,4 @@
-package vcc.viv.voiceai.ui.screen.home
+package vcc.viv.voiceai.ui.screen.sale
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,7 +54,7 @@ import vcc.viv.voiceai.ui.component.CustomTextField
 
 @Composable
 fun ProductScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: SaleViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val menuUiState by viewModel.menuUiState.collectAsStateWithLifecycle()

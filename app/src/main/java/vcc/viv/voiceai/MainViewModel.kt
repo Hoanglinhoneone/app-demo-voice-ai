@@ -8,14 +8,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import vcc.viv.voiceai.common.TextToSpeechManager
+import vcc.viv.voiceai.common.speechtext.TextToSpeechManager
 import vcc.viv.voiceai.common.base.BaseViewModel
 import vcc.viv.voiceai.common.llm.LargeLangModel
 import vcc.viv.voiceai.common.model.ChatRequest
 import vcc.viv.voiceai.common.model.Message
 import vcc.viv.voiceai.common.model.ModelInfo
 import vcc.viv.voiceai.common.model.Role
-import vcc.viv.voiceai.common.speech.SpeechToTextManager
+import vcc.viv.voiceai.common.speechtext.SpeechToTextManager
 import vcc.viv.voiceai.data.repository.chat.ChatRepository
 import java.util.Locale
 import javax.inject.Inject
@@ -52,8 +52,8 @@ class MainViewModel @Inject constructor(
      * Init
      ***********************************************************************/
     init {
-        getModels()
-        getModelInfo()
+        initModels()
+        initModelInfo()
         // TTS
         viewModelScope.launch {
             launch {
@@ -124,7 +124,8 @@ class MainViewModel @Inject constructor(
     /* **********************************************************************
      * Function
      ***********************************************************************/
-    private fun getModels() {
+    private fun initModels() {
+        Timber.i("get list model")
         viewModelScope.launch {
             try {
                 val result = chatRepository.getModels()
@@ -137,7 +138,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun getModelInfo(model: String = "deepseek-coder-v2-lite-instruct") {
+    private fun initModelInfo(model: String = "deepseek-coder-v2-lite-instruct") {
+        Timber.i("get model info")
         viewModelScope.launch {
             try {
                 val result = chatRepository.getModelInfo(model)
@@ -150,11 +152,13 @@ class MainViewModel @Inject constructor(
     }
 
     fun changeModel(modelInfo: ModelInfo) {
+        Timber.i("change model")
         _uiState.update { it.copy(modelInfo = modelInfo) }
         _messages.update { emptyList() }
     }
 
     private fun sendMessageToServer(message: Message) {
+        Timber.i("Send message to server")
         viewModelScope.launch {
             try {
                 Timber.d("LinhHN message: $message")
@@ -206,6 +210,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun updateMessages(message: Message) {
+        Timber.i("Update messages: $message")
         val messages = _messages.value.toMutableList()
         messages.add(message)
         _messages.value = messages
@@ -272,7 +277,6 @@ class MainViewModel @Inject constructor(
         speechToTextManager.stopListening()
     }
 
-    // shutdown viewmodel
     override fun onCleared() {
         super.onCleared()
         textToSpeechManager.shutdown()

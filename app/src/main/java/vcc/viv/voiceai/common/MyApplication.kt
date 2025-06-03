@@ -17,10 +17,10 @@ class MyApplication : Application() {
 
     }
 
-    // Ví dụ về một cây log tùy chỉnh cho chế độ release
+    // example
     class ReleaseTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-            // Xử lý log trong chế độ release, ví dụ gửi log đến server
+            // handle in release mode
         }
     }
 }

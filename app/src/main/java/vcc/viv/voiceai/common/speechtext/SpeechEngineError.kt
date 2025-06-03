@@ -1,4 +1,4 @@
-package vcc.viv.voiceai.common.speech
+package vcc.viv.voiceai.common.speechtext
 
 import android.speech.SpeechRecognizer
 

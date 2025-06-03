@@ -6,8 +6,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import vcc.viv.voiceai.common.speech.SpeechToTextManager
-import vcc.viv.voiceai.common.TextToSpeechManager
+import vcc.viv.voiceai.common.speechtext.SpeechToTextManager
+import vcc.viv.voiceai.common.speechtext.TextToSpeechManager
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)

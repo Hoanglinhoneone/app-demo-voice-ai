@@ -1,4 +1,4 @@
-package vcc.viv.voiceai.common
+package vcc.viv.voiceai.common.speechtext
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
@@ -32,14 +32,10 @@ class TextToSpeechManager @Inject constructor(private val context: Context) {
      * Init
      ********************************************************************** */
     init {
-        initializeTextToSpeech()
+        initialize()
     }
 
-    /* **********************************************************************
-     *  Private Function
-     ********************************************************************** */
-    // Khởi tạo TextToSpeech
-    private fun initializeTextToSpeech() {
+    private fun initialize() {
         Timber.i("Đang khởi tạo Text To Speech")
         textToSpeech = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
@@ -64,13 +60,6 @@ class TextToSpeechManager @Inject constructor(private val context: Context) {
         }
     }
 
-    //    private fun installVoiceData() {
-//        Timber.i("Installing voice data")
-//        val intent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
-//        intent.addFlags(Settings.ACTION_TTS_SETTINGS)
-//        context.startActivity(intent)
-//    }
-    // Theo dõi trạng thái khi nói
     private fun setupUtteranceListener() {
         textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
@@ -99,34 +88,9 @@ class TextToSpeechManager @Inject constructor(private val context: Context) {
         })
     }
 
-    fun speak(text: String, queueMode: Int = TextToSpeech.QUEUE_FLUSH) {
-        val tts = textToSpeech ?: run {
-            Timber.i("Không thể nói")
-            _error.value = "Text To Speech chưa được khởi tạo"
-            return
-        }
-        Timber.d("Bắt đầu nói :$text")
-        val utteranceId = UUID.randomUUID().toString()
-        tts.speak(text, queueMode, null, utteranceId)
-    }
-
-    fun stop() {
-        Timber.i("Dừng nói")
-        textToSpeech?.stop()
-        _isSpeaking.value = false
-    }
-
-    fun setVoice(voice: Voice) {
-        Timber.i("Đã set voice : $voice")
-        textToSpeech?.voice = voice
-    }
-
-    fun getSupportVoices(): Collection<Voice> {
-        Timber.d("Đã get voices")
-        return textToSpeech?.voices ?: emptyList()
-    }
-
-
+    /* **********************************************************************
+     *  SET Function
+     ********************************************************************** */
     fun setLanguage(locale: Locale): Boolean {
         val tts = textToSpeech ?: run {
             _error.value = "Text To Speech chưa được khởi tạo"
@@ -154,6 +118,40 @@ class TextToSpeechManager @Inject constructor(private val context: Context) {
     fun setSpeechRate(rate: Float) {
         Timber.d("Đã set SpeechRate: $rate")
         textToSpeech?.setSpeechRate(rate)
+    }
+
+
+    fun setVoice(voice: Voice) {
+        Timber.i("Đã set voice : $voice")
+        textToSpeech?.voice = voice
+    }
+
+    /* **********************************************************************
+     *  GET
+     ********************************************************************** */
+    fun getSupportVoices(): Collection<Voice> {
+        Timber.d("Đã get voices")
+        return textToSpeech?.voices ?: emptyList()
+    }
+
+    /* **********************************************************************
+     *  Action
+     ********************************************************************** */
+    fun speak(text: String, queueMode: Int = TextToSpeech.QUEUE_FLUSH) {
+        val tts = textToSpeech ?: run {
+            Timber.i("Không thể nói")
+            _error.value = "Text To Speech chưa được khởi tạo"
+            return
+        }
+        Timber.d("Bắt đầu nói :$text")
+        val utteranceId = UUID.randomUUID().toString()
+        tts.speak(text, queueMode, null, utteranceId)
+    }
+
+    fun stop() {
+        Timber.i("Dừng nói")
+        textToSpeech?.stop()
+        _isSpeaking.value = false
     }
 
     fun shutdown() {

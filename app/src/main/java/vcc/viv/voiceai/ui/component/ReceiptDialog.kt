@@ -124,7 +124,6 @@ fun ReceiptDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Items header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -165,7 +164,6 @@ fun ReceiptDialog(
 
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
 
-                // Total
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,

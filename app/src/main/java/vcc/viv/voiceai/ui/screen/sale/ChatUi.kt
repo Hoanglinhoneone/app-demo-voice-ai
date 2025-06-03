@@ -1,4 +1,5 @@
-package vcc.viv.voiceai.ui.screen.home
+package vcc.viv.voiceai.ui.screen.sale
+
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -9,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,14 +18,18 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +51,7 @@ import timber.log.Timber
 import vcc.viv.voiceai.MainViewModel
 import vcc.viv.voiceai.R
 import vcc.viv.voiceai.common.model.Message
+import vcc.viv.voiceai.common.model.Participant
 import vcc.viv.voiceai.common.model.Role
 import vcc.viv.voiceai.ui.component.ModelDropdownMenu
 import vcc.viv.voiceai.ui.theme.VoiceAiTheme
@@ -57,7 +64,6 @@ fun ChatScreen(
     val isDarkMode = isSystemInDarkTheme()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val chatViewModel: ChatViewModel = hiltViewModel()
     val mainViewModel: MainViewModel = hiltViewModel()
     val ttsState by mainViewModel.ttsState.collectAsStateWithLifecycle()
     val sttState = mainViewModel.sttState.collectAsState()
@@ -244,6 +250,66 @@ fun ChatView(
         items(messages) { message ->
             ChatItem(message)
         }
+    }
+}
+
+
+@Composable
+fun ChatItem(message: Message, modifier: Modifier = Modifier) {
+    val isUserMessage = message.participant == Role.USER.title
+
+    val messageBackgroundColor = when (message.participant) {
+        Role.USER.title -> MaterialTheme.colorScheme.tertiaryContainer
+        Role.ASSISTANT.title -> MaterialTheme.colorScheme.primaryContainer
+        else -> {
+            MaterialTheme.colorScheme.errorContainer
+        }
+    }
+
+    val bubbleShape = if (isUserMessage) {
+        RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
+    } else {
+        RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
+    }
+
+    val alignment = if (isUserMessage) Alignment.End else Alignment.Start
+
+    Column(
+        horizontalAlignment = alignment,
+        modifier = modifier
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .fillMaxWidth()
+    ) {
+
+        BoxWithConstraints {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = messageBackgroundColor),
+                shape = bubbleShape,
+                modifier = Modifier.widthIn(0.dp, maxWidth * 0.9f)
+            ) {
+                Text(
+                    text = message.content,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        }
+        Text(
+            text = if (isUserMessage) Participant.USER.title else Participant.ASSISTANT.title,
+            color = MaterialTheme.colorScheme.outline
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChatItemPreview() {
+    Surface {
+        ChatItem(
+            message = Message(
+                participant = Role.USER.title,
+                content = "Hoàng ngọc linh nè"
+            )
+        )
     }
 }
 
