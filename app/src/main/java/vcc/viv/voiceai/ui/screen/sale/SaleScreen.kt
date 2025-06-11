@@ -56,14 +56,14 @@ fun SaleScreen(
     mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val messages by mainViewModel.messages.collectAsState()
-    var showChatView by remember { mutableStateOf(false) }
-    LaunchedEffect(
-        messages.size
-    ) {
-        showChatView = true
-        delay(3000)
-        showChatView = false
-    }
+    var showChatView by remember { mutableStateOf(true) }
+//    LaunchedEffect(
+//        messages.size
+//    ) {
+//        showChatView = true
+//        delay(3000)
+//        showChatView = false
+//    }
     Row(
         modifier = modifier.fillMaxSize(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -76,8 +76,8 @@ fun SaleScreen(
             if (showChatView) {
                 ChatView(
                     modifier = Modifier
-                        .fillMaxWidth(0.5f)
-                        .fillMaxHeight(0.5f)
+                        .fillMaxWidth(1f)
+                        .fillMaxHeight(0.95f)
                         .align(Alignment.BottomCenter),
                     messages = messages
                 )
@@ -94,6 +94,7 @@ fun CardUi(
     val cartUiState by viewModel.cartUiState.collectAsStateWithLifecycle()
     val productsState = rememberLazyListState()
     val listProduct = cartUiState.listProduct
+
     LaunchedEffect(listProduct.size) {
         listProduct.let {
             if (listProduct.isNotEmpty()) productsState.animateScrollToItem(listProduct.size - 1)

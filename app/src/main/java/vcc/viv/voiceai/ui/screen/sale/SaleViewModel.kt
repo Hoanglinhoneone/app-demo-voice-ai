@@ -54,7 +54,6 @@ class SaleViewModel @Inject constructor(
             is MenuAction.OnClickAddCart -> {
                 updateCart(menuAction.product)
             }
-
         }
     }
 
@@ -99,8 +98,14 @@ class SaleViewModel @Inject constructor(
     }
 
     private fun updateCart(product: Product) {
+        Timber.i("update product in cart...")
         val productsInCart = _cartUiState.value.listProduct.toMutableList()
-        productsInCart.add(product)
+        val existingProduct = productsInCart.find { it.id == product.id }
+        if(existingProduct != null) {
+            existingProduct.quantity = (existingProduct.quantity.toInt() + product.quantity.toInt()).toString()
+        } else {
+            productsInCart.add(product)
+        }
         _cartUiState.update {
             it.copy(
                 listProduct = productsInCart,
