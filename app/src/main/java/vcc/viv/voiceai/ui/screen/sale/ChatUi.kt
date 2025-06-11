@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -239,21 +240,34 @@ fun ChatView(
         listState.animateScrollToItem(messages.size)
     }
 
-    LazyColumn(
-        state = listState,
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.onSurface, shape = RoundedCornerShape(16.dp)),
-        contentPadding = PaddingValues(8.dp, 10.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Box (
+        modifier = modifier.fillMaxSize()
     ) {
-        items(messages) { message ->
-            ChatItem(message)
+        LazyColumn(
+            state = listState,
+            modifier = modifier
+                .align(Alignment.Center)
+                .fillMaxSize(0.95f)
+                .background(MaterialTheme.colorScheme.onSurface, shape = RoundedCornerShape(16.dp)),
+            contentPadding = PaddingValues(8.dp, 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(messages) { message ->
+                ChatItem(message)
+            }
         }
+        Icon(
+            painter = painterResource(id = R.drawable.ic_close),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        )
     }
 }
 
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun ChatItem(message: Message, modifier: Modifier = Modifier) {
     val isUserMessage = message.participant == Role.USER.title
