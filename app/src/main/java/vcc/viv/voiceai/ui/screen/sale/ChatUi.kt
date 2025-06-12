@@ -36,8 +36,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -65,9 +67,8 @@ fun ChatScreen(
     val isDarkMode = isSystemInDarkTheme()
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    var showChatView by remember { mutableStateOf(true) }
     val mainViewModel: MainViewModel = hiltViewModel()
-    val ttsState by mainViewModel.ttsState.collectAsStateWithLifecycle()
-    val sttState = mainViewModel.sttState.collectAsState()
     val messages by mainViewModel.messages.collectAsState()
     val uiState by mainViewModel.uiState.collectAsState()
     val scope: CoroutineScope = rememberCoroutineScope()
@@ -195,7 +196,14 @@ fun ChatScreen(
                     .fillMaxHeight()
                     .padding(8.dp)
             ) {
-                ChatView(messages)
+                if(showChatView) {
+                    ChatView(
+                        messages,
+                        onClickClose = {
+                            showChatView = false
+                        }
+                    )
+                }
             }
         }
     }
@@ -232,6 +240,7 @@ fun ChatView(
         Message(Role.USER.title, "Toi là linh"),
         Message(Role.ASSISTANT.title, "Xin chào tôi là trợ lý ảo"),
     ),
+    onClickClose: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
@@ -262,6 +271,9 @@ fun ChatView(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(8.dp)
+                .clickable { 
+                    onClickClose()
+                }
         )
     }
 }

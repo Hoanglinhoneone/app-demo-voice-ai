@@ -1,5 +1,6 @@
 package vcc.viv.voiceai.ui.screen.sale
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,6 +42,7 @@ import vcc.viv.voiceai.common.model.Order
 import vcc.viv.voiceai.common.model.Product
 import vcc.viv.voiceai.ui.component.CustomTextField
 import vcc.viv.voiceai.ui.component.ReceiptDialog
+import vcc.viv.voiceai.R
 
 @Preview(showBackground = true)
 @Composable
@@ -56,7 +59,7 @@ fun SaleScreen(
     mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val messages by mainViewModel.messages.collectAsState()
-    var showChatView by remember { mutableStateOf(true) }
+    var showChatView by remember { mutableStateOf(false) }
 //    LaunchedEffect(
 //        messages.size
 //    ) {
@@ -73,15 +76,25 @@ fun SaleScreen(
             modifier = Modifier.weight(0.5f)
         ) {
             ProductScreen(viewModel = viewModel, modifier = Modifier.fillMaxSize())
+            IconChat(
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 8.dp, bottom = 12.dp),
+                onClickChatView = {
+                    showChatView = true
+                }
+            )
             if (showChatView) {
                 ChatView(
                     modifier = Modifier
                         .fillMaxWidth(1f)
                         .fillMaxHeight(0.95f)
                         .align(Alignment.BottomCenter),
-                    messages = messages
+                    messages = messages,
+                    onClickClose = {
+                        showChatView = false
+                    }
                 )
             }
+
         }
     }
 }
@@ -357,4 +370,23 @@ fun ItemCard(
             style = textStyle
         )
     }
+}
+
+@Composable
+fun IconChat(
+    modifier: Modifier = Modifier,
+    onClickChatView: () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_chat_100),
+            contentDescription = null,
+            modifier = modifier.clickable {
+                onClickChatView()
+            }
+        )
+    }
+
 }
