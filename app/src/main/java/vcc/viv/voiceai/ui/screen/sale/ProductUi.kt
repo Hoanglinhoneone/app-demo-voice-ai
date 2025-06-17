@@ -50,7 +50,9 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import vcc.viv.voiceai.common.model.Product
+import vcc.viv.voiceai.common.model.TypeFilter
 import vcc.viv.voiceai.ui.component.CustomTextField
+import kotlin.enums.EnumEntries
 
 @Composable
 fun ProductScreen(
@@ -79,6 +81,8 @@ fun ProductScreen(
             ) {
                 CustomTextField(
                     value = menuUiState.textSearch,
+                    maxLines = 1,
+                    singleLine = true,
                     onValueChange = {
                         viewModel.onMenuAction(MenuAction.OnInputSearchChange(it))
                     },
@@ -110,20 +114,20 @@ fun ProductScreen(
                 }
             )
         }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val listFastSearch =
-                listOf(
-                    FastSearch(1, "tt"),
-                    FastSearch(2, "muối"),
-                    FastSearch(3, "trà")
-                )
-            listFastSearch.forEach { fastSearch ->
-                ItemFastSearch(fastSearch = fastSearch)
-            }
-        }
+//        Row(
+//            horizontalArrangement = Arrangement.spacedBy(8.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            val listFastSearch =
+//                listOf(
+//                    FastSearch(1, "tt"),
+//                    FastSearch(2, "muối"),
+//                    FastSearch(3, "trà")
+//                )
+//            listFastSearch.forEach { fastSearch ->
+//                ItemFastSearch(fastSearch = fastSearch)
+//            }
+//        }
         ProductView(
             products = menuUiState.listProduct,
             onQuantityChange = { quantity, id ->
@@ -206,7 +210,7 @@ fun ItemProduct(
                 value = product.quantity.toString(),
                 onValueChange = { onQuantityChange(it, product.id) },
                 modifier = Modifier
-                    .padding(horizontal = 4.dp, vertical = 8.dp)
+                    .padding(horizontal = 4.dp, vertical = 4.dp)
                     .width(36.dp),
                 textStyle = TextStyle(
                     fontSize = MaterialTheme.typography.bodySmall.fontSize,
@@ -217,6 +221,10 @@ fun ItemProduct(
                     keyboardType = KeyboardType.Number,
                 ),
                 singleLine = true
+            )
+            Text(
+                text = "${product.price}k",
+                style = MaterialTheme.typography.bodySmall,
             )
             Box(
                 contentAlignment = Alignment.Center,
@@ -240,14 +248,9 @@ fun ItemProduct(
 @Composable
 fun ItemDropdown(
     modifier: Modifier = Modifier,
-    listItem: List<String> = listOf(
-        "Tất cả",
-        "Giá từ thấp đến cao",
-        "Giá từ cao đến thấp",
-        "Sắp xếp theo A-Z"
-    ),
+    listItem: EnumEntries<TypeFilter> = TypeFilter.entries,
     defaultSearch: String = "Tất cả",
-    onTimeChange: (String) -> Unit = {}
+    onTimeChange: (TypeFilter) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box(
@@ -285,7 +288,7 @@ fun ItemDropdown(
         ) {
             listItem.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option.value) },
                     onClick = {
                         onTimeChange(option)
                         expanded = false

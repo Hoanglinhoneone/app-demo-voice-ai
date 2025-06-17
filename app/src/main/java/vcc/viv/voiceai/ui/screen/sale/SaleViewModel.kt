@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import vcc.viv.voiceai.common.model.Product
+import vcc.viv.voiceai.common.model.TypeFilter
+import vcc.viv.voiceai.common.normalizeString
 import vcc.viv.voiceai.data.repository.product.ProductRepository
 import javax.inject.Inject
 
@@ -29,8 +31,13 @@ class SaleViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _menuUiState.value =
-                _menuUiState.value.copy(listProduct = productRepository.getProduct())
+            val listProduct = productRepository.getProduct()
+            _menuUiState.update {
+                it.copy(
+                    listProduct = listProduct,
+                    listProductBackup = listProduct
+                )
+            }
         }
     }
 
@@ -40,11 +47,36 @@ class SaleViewModel @Inject constructor(
     fun onMenuAction(menuAction: MenuAction) {
         when (menuAction) {
             is MenuAction.OnInputSearchChange -> {
-                _menuUiState.value = _menuUiState.value.copy(textSearch = menuAction.text)
+                val searchInput = menuAction.text
+                _menuUiState.value = _menuUiState.value.copy(textSearch = searchInput)
+                searchProductByText()
+                if (searchInput.isEmpty()) _menuUiState.update { it.copy(listProduct = it.listProductBackup) }
             }
 
             is MenuAction.OnTypeFilterChange -> {
-                _menuUiState.value = _menuUiState.value.copy(itemDropdown = menuAction.type)
+                _menuUiState.value = _menuUiState.value.copy(itemDropdown = menuAction.type.value)
+                when (menuAction.type) {
+                    TypeFilter.ALL -> {
+                        _menuUiState.update { it.copy(listProduct = it.listProductBackup) }
+                    }
+
+                    TypeFilter.SORT_BY_A_Z -> {
+                        _menuUiState.update {
+                            it.copy(listProduct = it.listProduct.sortedBy { it.name })
+                        }
+                    }
+
+                    TypeFilter.PRICE_HIGH_TO_LOW -> {
+                        _menuUiState.update {
+                            it.copy(listProduct = it.listProduct.sortedByDescending { it.price })
+                        }
+                    }
+                    TypeFilter.PRICE_LOW_TO_HIGH -> {
+                        _menuUiState.update {
+                            it.copy(listProduct = it.listProduct.sortedBy { it.price })
+                        }
+                    }
+                }
             }
 
             is MenuAction.OnQuantityChange -> {
@@ -54,6 +86,15 @@ class SaleViewModel @Inject constructor(
             is MenuAction.OnClickAddCart -> {
                 updateCart(menuAction.product)
             }
+        }
+    }
+
+    private fun searchProductByText() {
+        _menuUiState.update { state ->
+            state.copy(listProduct = state.listProductBackup.filter { product ->
+                product.name.normalizeString()
+                    .contains(menuUiState.value.textSearch.normalizeString(), true)
+            })
         }
     }
 
@@ -101,8 +142,9 @@ class SaleViewModel @Inject constructor(
         Timber.i("update product in cart...")
         val productsInCart = _cartUiState.value.listProduct.toMutableList()
         val existingProduct = productsInCart.find { it.id == product.id }
-        if(existingProduct != null) {
-            existingProduct.quantity = (existingProduct.quantity.toInt() + product.quantity.toInt()).toString()
+        if (existingProduct != null) {
+            existingProduct.quantity =
+                (existingProduct.quantity.toInt() + product.quantity.toInt()).toString()
         } else {
             productsInCart.add(product)
         }
@@ -133,7 +175,8 @@ class SaleViewModel @Inject constructor(
 data class MenuUiState(
     val textSearch: String = "",
     val itemDropdown: String = "Tất cả",
-    var listProduct: List<Product> = emptyList()
+    var listProduct: List<Product> = emptyList(),
+    val listProductBackup: List<Product> = emptyList()
 )
 
 data class CartUiState(
