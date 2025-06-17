@@ -1,5 +1,6 @@
 package vcc.viv.voiceai
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,8 @@ class MainActivity : ComponentActivity() {
         Timber.i("onCreate MainActivity")
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+
         setContent {
             VoiceAiTheme {
                 SaleScreen()
