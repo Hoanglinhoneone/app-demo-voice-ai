@@ -1,7 +1,10 @@
 package vcc.viv.voiceai.ui.screen.sale
 
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -25,7 +28,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
- import androidx.compose.material3.Icon
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -47,9 +50,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import vcc.viv.voiceai.MainViewModel
 import vcc.viv.voiceai.R
@@ -59,7 +65,7 @@ import vcc.viv.voiceai.common.model.Role
 import vcc.viv.voiceai.ui.component.ModelDropdownMenu
 import vcc.viv.voiceai.ui.theme.VoiceAiTheme
 
-@SuppressLint("ShowToast")
+@SuppressLint("ShowToast", "CoroutineCreationDuringComposition")
 @Composable
 fun ChatScreen(
     modifier: Modifier = Modifier
@@ -73,14 +79,14 @@ fun ChatScreen(
     val uiState by mainViewModel.uiState.collectAsState()
     val scope: CoroutineScope = rememberCoroutineScope()
     val permissionLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
             onResult = { isGranted ->
                 Timber.i("Permission granted = $isGranted")
                 if (isGranted) {
                     mainViewModel.startListening()
                 }
             })
-
 
     Scaffold(
         snackbarHost = {
@@ -196,7 +202,7 @@ fun ChatScreen(
                     .fillMaxHeight()
                     .padding(8.dp)
             ) {
-                if(showChatView) {
+                if (showChatView) {
                     ChatView(
                         messages,
                         onClickClose = {
@@ -231,6 +237,7 @@ fun ItemChat(
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ChatView(
     messages: List<Message> = listOf(
@@ -249,7 +256,7 @@ fun ChatView(
         listState.animateScrollToItem(messages.size)
     }
 
-    Box (
+    Box(
         modifier = modifier.fillMaxSize()
     ) {
         LazyColumn(
@@ -257,7 +264,10 @@ fun ChatView(
             modifier = modifier
                 .align(Alignment.Center)
                 .fillMaxSize(0.95f)
-                .background(MaterialTheme.colorScheme.onSurface, shape = RoundedCornerShape(16.dp)),
+                .background(
+                    MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(16.dp)
+                ),
             contentPadding = PaddingValues(8.dp, 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -271,7 +281,7 @@ fun ChatView(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(8.dp)
-                .clickable { 
+                .clickable {
                     onClickClose()
                 }
         )

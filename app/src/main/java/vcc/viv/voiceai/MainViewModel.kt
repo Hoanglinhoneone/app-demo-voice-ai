@@ -21,7 +21,7 @@ import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class  MainViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val textToSpeechManager: TextToSpeechManager,
     private val speechToTextManager: SpeechToTextManager,
@@ -54,7 +54,6 @@ class MainViewModel @Inject constructor(
     init {
         initModels()
         initModelInfo()
-        // TTS
         viewModelScope.launch {
             launch {
                 textToSpeechManager.isSpeaking.collect { isSpeaking ->
@@ -79,7 +78,6 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-//        STT
         viewModelScope.launch {
             launch {
                 speechToTextManager.isListening.collect { isListening ->

@@ -71,6 +71,7 @@ class SaleViewModel @Inject constructor(
                             it.copy(listProduct = it.listProduct.sortedByDescending { it.price })
                         }
                     }
+
                     TypeFilter.PRICE_LOW_TO_HIGH -> {
                         _menuUiState.update {
                             it.copy(listProduct = it.listProduct.sortedBy { it.price })

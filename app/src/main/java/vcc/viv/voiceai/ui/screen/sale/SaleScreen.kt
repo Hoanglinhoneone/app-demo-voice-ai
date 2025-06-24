@@ -91,7 +91,7 @@ fun SaleScreen(
                     messages = messages,
                     onClickClose = {
                         showChatView = false
-                    }
+                    },
                 )
             }
 
